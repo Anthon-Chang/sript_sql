@@ -57,38 +57,34 @@ insert into detalles_pedido (pedido_id, producto_id, cantidad, precio_unitario) 
 (3, 3, 1, 45.00);
 
 -- función para obtener el nombre de un cliente
+
 delimiter //
 create function obtener_nombre(cliente_id int) returns varchar(101)
 deterministic
 begin
-    declare nombre_completo varchar(101);
-    select concat(nombre, ' ', apellido) into nombre_completo
-    from clientes
-    where id = cliente_id;
-    return nombre_completo;
+    return (select nombre from clientes where id = cliente_id limit 1); -- Devuelve el nombre del cliente.
 end //
 delimiter ;
 
--- FUNCIONES
 -- función para calcular el descuento de un producto
 delimiter //
-create function calcular_descuento(precio decimal(10, 2), descuento decimal(5, 2)) returns decimal(10, 2)
+create function descuento(precio decimal(10, 2), descuento decimal(5, 2)) returns decimal(10, 2)
 deterministic
 begin
-    return precio - (precio * (descuento / 100));
+    return precio - (precio * (descuento / 100)); -- Calcula y devuelve el precio con descuento.
 end //
 delimiter ;
 
 -- Función para calcular el total de un pedido
 delimiter //
-create function calcular_total_pedido(pedido_id int) returns decimal(10, 2)
+create function total_pedido(pedido_id int) returns decimal(10, 2)
 deterministic
 begin
     declare total_pedido decimal(10, 2);
     select precio_unitario * cantidad into total_pedido
     from detalles_pedido
-    where detalles_pedido.pedido_id = pedido_id;
-    return total_pedido;
+    where detalles_pedido.pedido_id = pedido_id; -- Calcula el total del pedido.
+    return total_pedido; 
 end //
 delimiter ;
 
@@ -100,11 +96,11 @@ begin
     declare stock_disponible int;
     select stock into stock_disponible
     from productos
-    where productos.id = producto_id;
+    where productos.id = producto_id; -- Obtiene el stock disponible del producto.
     if stock_disponible >= cantidad then
-        return 'true';
+        return 'true'; -- Retorna 'true' si hay suficiente stock
     else
-        return 'false';
+        return 'false'; -- Retorna 'false' si no hay suficiente stock.
     end if;
 end //
 delimiter ;
@@ -117,16 +113,21 @@ begin
     declare antiguedad int;
     select timestampdiff(year, fecha_registro, curdate()) into antiguedad
     from clientes
-    where id = cliente_id;
+    where id = cliente_id; -- Calcula la diferencia en años desde la fecha de registro.
     return antiguedad;
 end //
 delimiter ;
 
 -- CONSULTAS
+
+-- Obtener el nombre del cliente con ID 1.
 select obtener_nombre (1) as nombre_cliente;
 
-select calcular_descuento (25.00, 10) as precio_descuento;
+-- Obtener el total del pedido con ID 3.
+select descuento (25.00, 10) as precio_descuento;
 
-select calcular_total_pedido (3) as pedido_total;
+-- Obtener el total del pedido con ID 3.
+select total_pedido (3) as pedido_total;
 
+-- Verificar si hay suficiente stock para 40 unidades del producto con ID 1.
 select 	verificar_stock (1, 40) as stock;
